@@ -29,14 +29,14 @@ var SkyRTC = function() {
     EventEmitter.prototype.emit = function(eventName, _) {
         var events = this.events[eventName],
             args = Array.prototype.slice.call(arguments, 1),
-            i, m;
+                i, m;
 
-        if (!events) {
-            return;
-        }
-        for (i = 0, m = events.length; i < m; i++) {
-            events[i].apply(null, args);
-        }
+                if (!events) {
+                    return;
+                }
+                for (i = 0, m = events.length; i < m; i++) {
+                    events[i].apply(null, args);
+                }
     };
 
 
@@ -84,7 +84,7 @@ var SkyRTC = function() {
     //本地连接信道，信道为websocket
     skyrtc.prototype.connect = function(server, room) {
         var socket,
-            that = this;
+        that = this;
         room = room || "";
         socket = this.socket = new WebSocket(server);
         socket.onopen = function() {
@@ -143,8 +143,8 @@ var SkyRTC = function() {
             that.connections.push(data.socketId);
             var pc = that.createPeerConnection(data.socketId),
                 i, m;
-            pc.addStream(that.localMediaStream);
-            that.emit('new_peer', data.socketId);
+                pc.addStream(that.localMediaStream);
+                that.emit('new_peer', data.socketId);
         });
 
         this.on('_remove_peer', function(data) {
@@ -199,16 +199,16 @@ var SkyRTC = function() {
         if (getUserMedia) {
             this.numStreams++;
             getUserMedia.call(navigator, options, function(stream) {
-                    that.localMediaStream = stream;
-                    that.initializedStreams++;
-                    that.emit("stream_created", stream);
-                    if (that.initializedStreams === that.numStreams) {
-                        that.emit("ready");
-                    }
-                },
-                function(error) {
-                    that.emit("stream_create_error", error);
-                });
+                that.localMediaStream = stream;
+                that.initializedStreams++;
+                that.emit("stream_created", stream);
+                if (that.initializedStreams === that.numStreams) {
+                    that.emit("ready");
+                }
+            },
+            function(error) {
+                that.emit("stream_create_error", error);
+            });
         } else {
             that.emit("stream_create_error", new Error('WebRTC is not yet supported in this browser.'));
         }
@@ -217,8 +217,8 @@ var SkyRTC = function() {
     //将本地流添加到所有的PeerConnection实例中
     skyrtc.prototype.addStreams = function() {
         var i, m,
-            stream,
-            connection;
+        stream,
+        connection;
         for (connection in this.peerConnections) {
             this.peerConnections[connection].addStream(this.localMediaStream);
         }
@@ -243,8 +243,8 @@ var SkyRTC = function() {
     //向所有PeerConnection发送Offer类型信令
     skyrtc.prototype.sendOffers = function() {
         var i, m,
-            pc,
-            that = this,
+        pc,
+        that = this,
             pcCreateOfferCbGen = function(pc, socketId) {
                 return function(session_desc) {
                     pc.setLocalDescription(session_desc);
@@ -260,10 +260,10 @@ var SkyRTC = function() {
             pcCreateOfferErrorCb = function(error) {
                 console.log(error);
             };
-        for (i = 0, m = this.connections.length; i < m; i++) {
-            pc = this.peerConnections[this.connections[i]];
-            pc.createOffer(pcCreateOfferCbGen(pc, this.connections[i]), pcCreateOfferErrorCb);
-        }
+            for (i = 0, m = this.connections.length; i < m; i++) {
+                pc = this.peerConnections[this.connections[i]];
+                pc.createOffer(pcCreateOfferCbGen(pc, this.connections[i]), pcCreateOfferErrorCb);
+            }
     };
 
     //接收到Offer类型信令后作为回应返回answer类型信令
@@ -324,7 +324,7 @@ var SkyRTC = function() {
                         "socketId": socketId
                     }
                 }));
-            that.emit("pc_get_ice_candidate", evt.candidate, socketId, pc);
+                that.emit("pc_get_ice_candidate", evt.candidate, socketId, pc);
         };
 
         pc.onopen = function() {
@@ -444,17 +444,17 @@ var SkyRTC = function() {
     skyrtc.prototype.parseFilePacket = function(json, socketId) {
         var signal = json.signal,
             that = this;
-        if (signal === 'ask') {
-            that.receiveFileAsk(json.sendId, json.name, json.size, socketId);
-        } else if (signal === 'accept') {
-            that.receiveFileAccept(json.sendId, socketId);
-        } else if (signal === 'refuse') {
-            that.receiveFileRefuse(json.sendId, socketId);
-        } else if (signal === 'chunk') {
-            that.receiveFileChunk(json.data, json.sendId, socketId, json.last, json.percent);
-        } else if (signal === 'close') {
-            //TODO
-        }
+            if (signal === 'ask') {
+                that.receiveFileAsk(json.sendId, json.name, json.size, socketId);
+            } else if (signal === 'accept') {
+                that.receiveFileAccept(json.sendId, socketId);
+            } else if (signal === 'refuse') {
+                that.receiveFileRefuse(json.sendId, socketId);
+            } else if (signal === 'chunk') {
+                that.receiveFileChunk(json.data, json.sendId, socketId, json.last, json.percent);
+            } else if (signal === 'close') {
+                //TODO
+            }
     };
 
     /***********************发送者部分***********************/
@@ -463,7 +463,7 @@ var SkyRTC = function() {
     //通过Dtata channel向房间内所有其他用户广播文件
     skyrtc.prototype.shareFile = function(dom) {
         var socketId,
-            that = this;
+        that = this;
         for (socketId in that.dataChannels) {
             that.sendFile(dom, socketId);
         }
@@ -476,86 +476,86 @@ var SkyRTC = function() {
             reader,
             fileToSend,
             sendId;
-        if (typeof dom === 'string') {
-            dom = document.getElementById(dom);
-        }
-        if (!dom) {
-            that.emit("send_file_error", new Error("Can not find dom while sending file"), socketId);
-            return;
-        }
-        if (!dom.files || !dom.files[0]) {
-            that.emit("send_file_error", new Error("No file need to be sended"), socketId);
-            return;
-        }
-        file = dom.files[0];
-        that.fileChannels[socketId] = that.fileChannels[socketId] || {};
-        sendId = that.getRandomString();
-        fileToSend = {
-            file: file,
-            state: "ask"
-        };
-        that.fileChannels[socketId][sendId] = fileToSend;
-        that.sendAsk(socketId, sendId, fileToSend);
-        that.emit("send_file", sendId, socketId, file);
+            if (typeof dom === 'string') {
+                dom = document.getElementById(dom);
+            }
+            if (!dom) {
+                that.emit("send_file_error", new Error("Can not find dom while sending file"), socketId);
+                return;
+            }
+            if (!dom.files || !dom.files[0]) {
+                that.emit("send_file_error", new Error("No file need to be sended"), socketId);
+                return;
+            }
+            file = dom.files[0];
+            that.fileChannels[socketId] = that.fileChannels[socketId] || {};
+            sendId = that.getRandomString();
+            fileToSend = {
+                file: file,
+                state: "ask"
+            };
+            that.fileChannels[socketId][sendId] = fileToSend;
+            that.sendAsk(socketId, sendId, fileToSend);
+            that.emit("send_file", sendId, socketId, file);
     };
 
     //发送多个文件的碎片
     skyrtc.prototype.sendFileChunks = function() {
         var socketId,
-            sendId,
-            that = this,
+        sendId,
+        that = this,
             nextTick = false;
-        for (socketId in that.fileChannels) {
-            for (sendId in that.fileChannels[socketId]) {
-                if (that.fileChannels[socketId][sendId].state === "send") {
-                    nextTick = true;
-                    that.sendFileChunk(socketId, sendId);
+            for (socketId in that.fileChannels) {
+                for (sendId in that.fileChannels[socketId]) {
+                    if (that.fileChannels[socketId][sendId].state === "send") {
+                        nextTick = true;
+                        that.sendFileChunk(socketId, sendId);
+                    }
                 }
             }
-        }
-        if (nextTick) {
-            setTimeout(function() {
-                that.sendFileChunks();
-            }, 10);
-        }
+            if (nextTick) {
+                setTimeout(function() {
+                    that.sendFileChunks();
+                }, 10);
+            }
     };
 
     //发送某个文件的碎片
     skyrtc.prototype.sendFileChunk = function(socketId, sendId) {
         var that = this,
             fileToSend = that.fileChannels[socketId][sendId],
-            packet = {
-                type: "__file",
-                signal: "chunk",
-                sendId: sendId
-            },
-            channel;
+                packet = {
+                    type: "__file",
+                    signal: "chunk",
+                    sendId: sendId
+                },
+                channel;
 
-        fileToSend.sendedPackets++;
-        fileToSend.packetsToSend--;
+                fileToSend.sendedPackets++;
+                fileToSend.packetsToSend--;
 
 
-        if (fileToSend.fileData.length > packetSize) {
-            packet.last = false;
-            packet.data = fileToSend.fileData.slice(0, packetSize);
-            packet.percent = fileToSend.sendedPackets / fileToSend.allPackets * 100;
-            that.emit("send_file_chunk", sendId, socketId, fileToSend.sendedPackets / fileToSend.allPackets * 100, fileToSend.file);
-        } else {
-            packet.data = fileToSend.fileData;
-            packet.last = true;
-            fileToSend.state = "end";
-            that.emit("sended_file", sendId, socketId, fileToSend.file);
-            that.cleanSendFile(sendId, socketId);
-        }
+                if (fileToSend.fileData.length > packetSize) {
+                    packet.last = false;
+                    packet.data = fileToSend.fileData.slice(0, packetSize);
+                    packet.percent = fileToSend.sendedPackets / fileToSend.allPackets * 100;
+                    that.emit("send_file_chunk", sendId, socketId, fileToSend.sendedPackets / fileToSend.allPackets * 100, fileToSend.file);
+                } else {
+                    packet.data = fileToSend.fileData;
+                    packet.last = true;
+                    fileToSend.state = "end";
+                    that.emit("sended_file", sendId, socketId, fileToSend.file);
+                    that.cleanSendFile(sendId, socketId);
+                }
 
-        channel = that.dataChannels[socketId];
+                channel = that.dataChannels[socketId];
 
-        if (!channel) {
-            that.emit("send_file_error", new Error("Channel has been destoried"), socketId, sendId, fileToSend.file);
-            return;
-        }
-        channel.send(JSON.stringify(packet));
-        fileToSend.fileData = fileToSend.fileData.slice(packet.data.length);
+                if (!channel) {
+                    that.emit("send_file_error", new Error("Channel has been destoried"), socketId, sendId, fileToSend.file);
+                    return;
+                }
+                channel.send(JSON.stringify(packet));
+                fileToSend.fileData = fileToSend.fileData.slice(packet.data.length);
     };
 
     //发送文件请求后若对方同意接受,开始传输
@@ -570,11 +570,11 @@ var SkyRTC = function() {
                 fileToSend.packetsToSend = fileToSend.allPackets = parseInt(fileToSend.fileData.length / packetSize, 10);
                 that.sendFileChunks();
             };
-        fileToSend = that.fileChannels[socketId][sendId];
-        reader = new window.FileReader(fileToSend.file);
-        reader.readAsDataURL(fileToSend.file);
-        reader.onload = initSending;
-        that.emit("send_file_accepted", sendId, socketId, that.fileChannels[socketId][sendId].file);
+            fileToSend = that.fileChannels[socketId][sendId];
+            reader = new window.FileReader(fileToSend.file);
+            reader.readAsDataURL(fileToSend.file);
+            reader.onload = initSending;
+            that.emit("send_file_accepted", sendId, socketId, that.fileChannels[socketId][sendId].file);
     };
 
     //发送文件请求后若对方拒绝接受,清除掉本地的文件信息
@@ -595,18 +595,18 @@ var SkyRTC = function() {
     skyrtc.prototype.sendAsk = function(socketId, sendId, fileToSend) {
         var that = this,
             channel = that.dataChannels[socketId],
-            packet;
-        if (!channel) {
-            that.emit("send_file_error", new Error("Channel has been closed"), socketId, sendId, fileToSend.file);
-        }
-        packet = {
-            name: fileToSend.file.name,
-            size: fileToSend.file.size,
-            sendId: sendId,
-            type: "__file",
-            signal: "ask"
-        };
-        channel.send(JSON.stringify(packet));
+                packet;
+                if (!channel) {
+                    that.emit("send_file_error", new Error("Channel has been closed"), socketId, sendId, fileToSend.file);
+                }
+                packet = {
+                    name: fileToSend.file.name,
+                    size: fileToSend.file.size,
+                    sendId: sendId,
+                    type: "__file",
+                    signal: "ask"
+                };
+                channel.send(JSON.stringify(packet));
     };
 
     //获得随机字符串来生成文件发送ID
@@ -621,38 +621,38 @@ var SkyRTC = function() {
     skyrtc.prototype.receiveFileChunk = function(data, sendId, socketId, last, percent) {
         var that = this,
             fileInfo = that.receiveFiles[sendId];
-        if (!fileInfo.data) {
-            fileInfo.state = "receive";
-            fileInfo.data = "";
-        }
-        fileInfo.data = fileInfo.data || "";
-        fileInfo.data += data;
-        if (last) {
-            fileInfo.state = "end";
-            that.getTransferedFile(sendId);
-        } else {
-            that.emit("receive_file_chunk", sendId, socketId, fileInfo.name, percent);
-        }
+            if (!fileInfo.data) {
+                fileInfo.state = "receive";
+                fileInfo.data = "";
+            }
+            fileInfo.data = fileInfo.data || "";
+            fileInfo.data += data;
+            if (last) {
+                fileInfo.state = "end";
+                that.getTransferedFile(sendId);
+            } else {
+                that.emit("receive_file_chunk", sendId, socketId, fileInfo.name, percent);
+            }
     };
 
     //接收到所有文件碎片后将其组合成一个完整的文件并自动下载
     skyrtc.prototype.getTransferedFile = function(sendId) {
         var that = this,
             fileInfo = that.receiveFiles[sendId],
-            hyperlink = document.createElement("a"),
-            mouseEvent = new MouseEvent('click', {
-                view: window,
-                bubbles: true,
-                cancelable: true
-            });
-        hyperlink.href = fileInfo.data;
-        hyperlink.target = '_blank';
-        hyperlink.download = fileInfo.name || dataURL;
+                hyperlink = document.createElement("a"),
+                    mouseEvent = new MouseEvent('click', {
+                        view: window,
+                        bubbles: true,
+                        cancelable: true
+                    });
+                    hyperlink.href = fileInfo.data;
+                    hyperlink.target = '_blank';
+                    hyperlink.download = fileInfo.name || dataURL;
 
-        hyperlink.dispatchEvent(mouseEvent);
-        (window.URL || window.webkitURL).revokeObjectURL(hyperlink.href);
-        that.emit("receive_file", sendId, fileInfo.socketId, fileInfo.name);
-        that.cleanReceiveFile(sendId);
+                    hyperlink.dispatchEvent(mouseEvent);
+                    (window.URL || window.webkitURL).revokeObjectURL(hyperlink.href);
+                    that.emit("receive_file", sendId, fileInfo.socketId, fileInfo.name);
+                    that.cleanReceiveFile(sendId);
     };
 
     //接收到发送文件请求后记录文件信息
@@ -671,35 +671,35 @@ var SkyRTC = function() {
     skyrtc.prototype.sendFileAccept = function(sendId) {
         var that = this,
             fileInfo = that.receiveFiles[sendId],
-            channel = that.dataChannels[fileInfo.socketId],
-            packet;
-        if (!channel) {
-            that.emit("receive_file_error", new Error("Channel has been destoried"), sendId, socketId);
-        }
-        packet = {
-            type: "__file",
-            signal: "accept",
-            sendId: sendId
-        };
-        channel.send(JSON.stringify(packet));
+                channel = that.dataChannels[fileInfo.socketId],
+                    packet;
+                    if (!channel) {
+                        that.emit("receive_file_error", new Error("Channel has been destoried"), sendId, socketId);
+                    }
+                    packet = {
+                        type: "__file",
+                        signal: "accept",
+                        sendId: sendId
+                    };
+                    channel.send(JSON.stringify(packet));
     };
 
     //发送拒绝接受文件信令
     skyrtc.prototype.sendFileRefuse = function(sendId) {
         var that = this,
             fileInfo = that.receiveFiles[sendId],
-            channel = that.dataChannels[fileInfo.socketId],
-            packet;
-        if (!channel) {
-            that.emit("receive_file_error", new Error("Channel has been destoried"), sendId, socketId);
-        }
-        packet = {
-            type: "__file",
-            signal: "refuse",
-            sendId: sendId
-        };
-        channel.send(JSON.stringify(packet));
-        that.cleanReceiveFile(sendId);
+                channel = that.dataChannels[fileInfo.socketId],
+                    packet;
+                    if (!channel) {
+                        that.emit("receive_file_error", new Error("Channel has been destoried"), sendId, socketId);
+                    }
+                    packet = {
+                        type: "__file",
+                        signal: "refuse",
+                        sendId: sendId
+                    };
+                    channel.send(JSON.stringify(packet));
+                    that.cleanReceiveFile(sendId);
     };
 
     //清除接受文件缓存
